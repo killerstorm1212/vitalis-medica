@@ -1,0 +1,68 @@
+name: Build MoodDNA APK
+
+on:
+  push:
+    branches:
+      - mooddna-apk-build
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Reconstruct MoodDNA project archive
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cat             .mooddna_fixed/part01.b64             .mooddna_fixed/part02.b64             .mooddna_fixed/part03.b64             .mooddna_fixed/part04.b64             .mooddna/chunk03.b64             .mooddna/chunk04.b64             .mooddna/chunk05.b64             > /tmp/MoodDNA.zip.b64
+          test "$(wc -c < /tmp/MoodDNA.zip.b64)" -eq 68172
+          base64 --decode /tmp/MoodDNA.zip.b64 > /tmp/MoodDNA.zip
+          unzip -t /tmp/MoodDNA.zip
+          mkdir -p /tmp/mooddna-src
+          unzip -q /tmp/MoodDNA.zip -d /tmp/mooddna-src
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Set up Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Build debug APK
+        working-directory: /tmp/mooddna-src/MoodDNA
+        run: gradle --no-daemon --stacktrace :app:assembleDebug
+
+      - name: Verify APK
+        shell: bash
+        run: |
+          test -s /tmp/mooddna-src/MoodDNA/app/build/outputs/apk/debug/app-debug.apk
+          ls -lh /tmp/mooddna-src/MoodDNA/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoodDNA-Debug-APK
+          path: /tmp/mooddna-src/MoodDNA/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7

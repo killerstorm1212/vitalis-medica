@@ -28,6 +28,21 @@ jobs:
           unzip -t /tmp/MoodDNA.zip
           mkdir -p /tmp/mooddna-src
           unzip -q /tmp/MoodDNA.zip -d /tmp/mooddna-src
+          cat > /tmp/mooddna-src/MoodDNA/app/src/main/res/drawable/ic_launcher_foreground.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+              <path
+                  android:fillColor="#FFFFFF"
+                  android:pathData="M54,20 C35.2,20 20,35.2 20,54 C20,72.8 35.2,88 54,88 C72.8,88 88,72.8 88,54 C88,35.2 72.8,20 54,20 Z M54,78 C40.8,78 30,67.2 30,54 C30,40.8 40.8,30 54,30 C67.2,30 78,40.8 78,54 C78,67.2 67.2,78 54,78 Z"/>
+              <path
+                  android:fillColor="#E3DFFF"
+                  android:pathData="M54,42 C47.373,42 42,47.373 42,54 C42,60.627 47.373,66 54,66 C60.627,66 66,60.627 66,54 C66,47.373 60.627,42 54,42 Z"/>
+          </vector>
+          EOF
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
